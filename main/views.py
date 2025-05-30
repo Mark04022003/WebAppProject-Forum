@@ -6,7 +6,7 @@ from .forms import PostForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-
+from django.contrib import messages
 
 def home(request):
     forums = Category.objects.all()
@@ -77,6 +77,11 @@ def posts(request, slug):
 
 @login_required
 def create_post(request):
+    # Enforce that user must be active (email verified)
+    if not request.user.is_active:
+        messages.error(request, "You must verify your email before creating posts.")
+        return redirect("home")
+
     context = {}
     form = PostForm(request.POST or None)
     if request.method == "POST":

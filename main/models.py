@@ -17,7 +17,14 @@ class Author(models.Model):
     slug = slug = models.SlugField(max_length=400, unique=True, blank=True)
     bio = HTMLField()
     points = models.IntegerField(default=0)
-    profile_pic = ResizedImageField(size=[50, 80], quality=100, upload_to="authors", default=None, null=True, blank=True)
+    profile_pic = ResizedImageField(
+    size=[50, 80],
+    quality=100,
+    upload_to="authors",
+    default="authors/default_avatar.jpg",  # <--- This is key!
+    null=True,
+    blank=True
+)
 
     def __str__(self):
         return self.fullname
