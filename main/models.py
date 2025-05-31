@@ -7,6 +7,8 @@ from hitcount.models import HitCountMixin, HitCount
 from django.contrib.contenttypes.fields import GenericRelation
 from taggit.managers import TaggableManager
 from django.shortcuts import reverse
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 User = get_user_model()
@@ -127,4 +129,9 @@ class Post(models.Model):
     def last_reply(self):
         return self.comments.latest("date")
 
+@receiver(post_save, sender=User)
+def create_author_profile(sender, instance, created, **kwargs):
+    if created:
+        # Create an Author for this User
+        Author.objects.create(user=instance, fullname=instance.username)
     

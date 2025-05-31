@@ -14,6 +14,9 @@ from django.urls import reverse
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from main.models import Author
+from django.utils.text import slugify
+
 
 
 #usernames = [user.username for user in User.objects.all()]
@@ -23,20 +26,21 @@ def signup(request):
     form = CustomUserCreationForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
-            # Create user but don't log in yet!
             new_user = form.save(commit=False)
-            new_user.is_active = False  # User is inactive until email confirmed
+            new_user.is_active = False  # Email verification
             new_user.save()
-            
-            # Send activation email
-            current_site = get_current_site(request)
-            subject = 'Activate your Forum Account'
-            uid = urlsafe_base64_encode(force_bytes(new_user.pk))
-            token = default_token_generator.make_token(new_user)
-            activation_link = f"http://{current_site.domain}{reverse('activate', kwargs={'uidb64': uid, 'token': token})}"
-            message = f'Hi {new_user.username},\n\nPlease activate your account by clicking the link:\n{activation_link}'
-            send_mail(subject, message, 'noreply@yourforum.com', [new_user.email])
+             # Generate a unique slug
+            slug = generate_unique_slug(new_user.username)
 
+            # Only create ONE Author object!
+            Author.objects.create(
+                user=new_user,
+                fullname=new_user.username,
+                slug=slug,
+                profile_pic='authors/default_pfp.png' # If you want a default profile picture
+            )
+            # Send activation email as before...
+            # ...
             messages.info(request, "Please check your email to activate your account.")
             return redirect("signin")
     context.update({
@@ -44,6 +48,15 @@ def signup(request):
         "title": "Signup",
     })
     return render(request, "register/signup.html", context)
+
+def generate_unique_slug(username):
+    base_slug = slugify(username)
+    slug = base_slug
+    counter = 1
+    while Author.objects.filter(slug=slug).exists():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+    return slug
 
 def signin(request):
     context = {}
@@ -72,6 +85,8 @@ def activate(request, uidb64, token):
     if user is not None and default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
+        if not Author.objects.filter(user=user).exists():
+            Author.objects.create(user=user, fullname=user.username)
         messages.success(request, "Your account has been activated! Please sign in.")
         return redirect("signin")
     else:

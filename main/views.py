@@ -56,7 +56,7 @@ def detail(request, slug):
 
 def posts(request, slug):
     category = get_object_or_404(Category, slug=slug)
-    posts = Post.objects.filter(approved=True, categories=category)
+    posts = Post.objects.filter(categories=category).order_by('-date')
     paginator = Paginator(posts, 5)
     page = request.GET.get("page")
     try:
@@ -87,7 +87,7 @@ def create_post(request):
     if request.method == "POST":
         if form.is_valid():
             print("\n\n its valid")
-            author = Author.objects.get(user=request.user)
+            author, created = Author.objects.get_or_create(user=request.user, defaults={'fullname': request.user.username})
             new_post = form.save(commit=False)
             new_post.user = author
             new_post.save()
