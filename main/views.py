@@ -7,12 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib import messages
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
-from django.http.response import JsonResponse
-
-from main.models import Post
-from main.serializers import PostSerializer
+from django.core.exceptions import ObjectDoesNotExist
 
 def home(request):
     forums = Category.objects.all()
@@ -83,7 +78,6 @@ def posts(request, slug):
 
 @login_required
 def create_post(request):
-    # Enforce that user must be active (email verified)
     if not request.user.is_active:
         messages.error(request, "You must verify your email before creating posts.")
         return redirect("home")
@@ -92,8 +86,11 @@ def create_post(request):
     form = PostForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
-            print("\n\n its valid")
-            author, created = Author.objects.get_or_create(user=request.user, defaults={'fullname': request.user.username})
+            try:
+                author = Author.objects.get(user=request.user)
+            except Author.DoesNotExist:
+                messages.error(request, "No author profile found for your account.")
+                return redirect("home")
             new_post = form.save(commit=False)
             new_post.user = author
             new_post.save()
@@ -117,42 +114,3 @@ def latest_posts(request):
 def search_result(request):
 
     return render(request, "search.html")
-
-@login_required
-def edit_post(request, slug):
-    post = get_object_or_404(Post, slug=slug)
-    if post.user.user != request.user:
-        messages.error(request, "You are not authorized to edit this post.")
-        return redirect("home")
-
-    form = PostForm(request.POST or None, instance=post)
-    if request.method == "POST":
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Post updated successfully.")
-            return redirect("detail", slug=post.slug)
-
-    context = {
-        "form": form,
-        "title": "Edit Post",
-        "post": post,
-    }
-    return render(request, "edit_post.html", context)
-
-@login_required
-def delete_post(request, slug):
-    post = get_object_or_404(Post, slug=slug)
-    if post.user.user != request.user:
-        messages.error(request, "You are not authorized to delete this post.")
-        return redirect("home")
-
-    if request.method == "POST":
-        post.delete()
-        messages.success(request, "Post deleted successfully.")
-        return redirect("home")
-
-    context = {
-        "post": post,
-        "title": "Delete Post"
-    }
-    return render(request, "delete_post.html", context)
