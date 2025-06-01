@@ -25,11 +25,18 @@
                     <div>Points: <u>{{post.user.points}}</u></div>
                 </div>
                 <div class="content">
-                    {{post.content|safe}}
+                    {{ post.content|safe }}
                     <br>
-                    <div class="comment">
-                        <button onclick="showComment()">Comment</button>
-                    </div>
+
+                    {% if request.user == post.user.user %}
+                    <div style="margin-top: 10px;">
+                        <a href="{% url 'edit_post' post.slug %}" class="btn btn-warning">Edit</a>
+                        <a href="{% url 'delete_post' post.slug %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this post?')">Delete</a>
+                </div>
+                {% endif %}
+
+                <div class="comment">
+                    <button onclick="showComment()">Comment</button>
                 </div>
             </div>
         </div>

@@ -80,12 +80,14 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+import pymysql
+pymysql.install_as_MySQLdb()
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'WebAppForumProject',       # Name of your MySQL DB
         'USER': 'root',   # Usually 'root' or whatever user you set up
-        'PASSWORD': '123456', # Your password
+        'PASSWORD': 'thanhthuy01042003!', # Your password
         'HOST': 'localhost',         # Or IP of your MySQL server
         'PORT': '3306',              # Default MySQL port
     }
