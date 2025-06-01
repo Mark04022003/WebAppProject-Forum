@@ -110,7 +110,7 @@ class Post(models.Model):
     state = models.CharField(max_length=40, default="zero")
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.mytitle)
+            self.slug = slugify(self.title)
         super(Post, self).save(*args, **kwargs)
 
     def __str__(self):
