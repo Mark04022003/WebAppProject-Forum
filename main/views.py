@@ -54,7 +54,7 @@ def detail(request, slug):
 
     context = {
         "post":post,
-        "title": "OZONE: "+post.title,
+        "title": "HCMIU-Forum: "+post.title,
     }
     update_views(request, post)
 
@@ -75,7 +75,7 @@ def posts(request, slug):
     context = {
         "posts":posts,
         "forum": category,
-        "title": "OZONE: Posts"
+        "title": "HCMIU-Forum: Posts"
     }
 
     return render(request, "posts.html", context)
@@ -103,7 +103,7 @@ def create_post(request):
             return redirect("home")
     context.update({
         "form": form,
-        "title": "OZONE: Create New Post"
+        "title": "HCMIU-Forum: Create New Post"
     })
     return render(request, "create_post.html", context)
 
@@ -111,7 +111,7 @@ def latest_posts(request):
     posts = Post.objects.all().filter(approved=True)[:10]
     context = {
         "posts":posts,
-        "title": "OZONE: Latest 10 Posts"
+        "title": "HCMIU-Forum: Latest 10 Posts"
     }
 
     return render(request, "latest-posts.html", context)
