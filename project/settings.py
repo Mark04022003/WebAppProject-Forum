@@ -87,7 +87,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'WebAppForumProject',       # Name of your MySQL DB
         'USER': 'root',   # Usually 'root' or whatever user you set up
-        'PASSWORD': '123456', # Your password
+        'PASSWORD': 'thanhthuy01042003!', # Your password
         'HOST': 'localhost',         # Or IP of your MySQL server
         'PORT': '3306',              # Default MySQL port
     }
