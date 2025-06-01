@@ -31,12 +31,14 @@ def signup(request):
             new_user.save()
             # Generate a unique slug
             slug = generate_unique_slug(new_user.username)
-            # Only create ONE Author object!
-            Author.objects.create(
+            # Only create if it doesn't exist!
+            author, created = Author.objects.get_or_create(
                 user=new_user,
-                fullname=new_user.username,
-                slug=slug,
-                profile_pic='authors/default_pfp.png'
+                defaults={
+                    "fullname": new_user.username,
+                    "slug": slug,
+                    "profile_pic": "authors/default_pfp.png"
+                }
             )
             # SEND ACTIVATION EMAIL
             from django.utils.http import urlsafe_base64_encode
