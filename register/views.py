@@ -29,18 +29,37 @@ def signup(request):
             new_user = form.save(commit=False)
             new_user.is_active = False  # Email verification
             new_user.save()
-             # Generate a unique slug
+            # Generate a unique slug
             slug = generate_unique_slug(new_user.username)
-
             # Only create ONE Author object!
             Author.objects.create(
                 user=new_user,
                 fullname=new_user.username,
                 slug=slug,
-                profile_pic='authors/default_pfp.png' # If you want a default profile picture
+                profile_pic='authors/default_pfp.png'
             )
-            # Send activation email as before...
-            # ...
+            # SEND ACTIVATION EMAIL
+            from django.utils.http import urlsafe_base64_encode
+            from django.utils.encoding import force_bytes
+            from django.contrib.auth.tokens import default_token_generator
+            from django.contrib.sites.shortcuts import get_current_site
+
+            current_site = get_current_site(request)
+            subject = "Activate Your Account"
+            uid = urlsafe_base64_encode(force_bytes(new_user.pk))
+            token = default_token_generator.make_token(new_user)
+            activation_link = f"http://{current_site.domain}/account/activate/{uid}/{token}/"
+
+            message = f"Hi {new_user.username},\nPlease click the link below to activate your account:\n{activation_link}"
+
+            send_mail(
+                subject,
+                message,
+                'noreply@yourforum.com',
+                [new_user.email],
+                fail_silently=False,
+            )
+
             messages.info(request, "Please check your email to activate your account.")
             return redirect("signin")
     context.update({
@@ -48,6 +67,7 @@ def signup(request):
         "title": "Signup",
     })
     return render(request, "register/signup.html", context)
+
 
 def generate_unique_slug(username):
     base_slug = slugify(username)

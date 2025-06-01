@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 
 def home(request):
     forums = Category.objects.all()
@@ -77,7 +78,6 @@ def posts(request, slug):
 
 @login_required
 def create_post(request):
-    # Enforce that user must be active (email verified)
     if not request.user.is_active:
         messages.error(request, "You must verify your email before creating posts.")
         return redirect("home")
@@ -86,8 +86,11 @@ def create_post(request):
     form = PostForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
-            print("\n\n its valid")
-            author, created = Author.objects.get_or_create(user=request.user, defaults={'fullname': request.user.username})
+            try:
+                author = Author.objects.get(user=request.user)
+            except Author.DoesNotExist:
+                messages.error(request, "No author profile found for your account.")
+                return redirect("home")
             new_post = form.save(commit=False)
             new_post.user = author
             new_post.save()
