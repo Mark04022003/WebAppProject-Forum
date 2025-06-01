@@ -7,6 +7,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
+from django.http.response import JsonResponse
+
+from main.models import Post
+from main.serializers import PostSerializer
 
 def home(request):
     forums = Category.objects.all()
@@ -111,3 +117,42 @@ def latest_posts(request):
 def search_result(request):
 
     return render(request, "search.html")
+
+@login_required
+def edit_post(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+    if post.user.user != request.user:
+        messages.error(request, "You are not authorized to edit this post.")
+        return redirect("home")
+
+    form = PostForm(request.POST or None, instance=post)
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Post updated successfully.")
+            return redirect("detail", slug=post.slug)
+
+    context = {
+        "form": form,
+        "title": "Edit Post",
+        "post": post,
+    }
+    return render(request, "edit_post.html", context)
+
+@login_required
+def delete_post(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+    if post.user.user != request.user:
+        messages.error(request, "You are not authorized to delete this post.")
+        return redirect("home")
+
+    if request.method == "POST":
+        post.delete()
+        messages.success(request, "Post deleted successfully.")
+        return redirect("home")
+
+    context = {
+        "post": post,
+        "title": "Delete Post"
+    }
+    return render(request, "delete_post.html", context)
